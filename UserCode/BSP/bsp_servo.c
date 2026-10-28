@@ -5,29 +5,10 @@
 //
 
 #include "bsp_servo.h"
+#include "bsp_tim.h"
 #include "utils.h"
 
 /*===| 内部函数 |===*/
-
-// 获取定时器计数时钟(APB1/APB2 定时器时钟, 非 1 分频时为 PCLK 的 2 倍)
-static uint32_t Servo_GetTimClk(const TIM_TypeDef *tim)
-{
-        RCC_ClkInitTypeDef clk_config = {0};
-        uint32_t           latency    = 0;
-        uint32_t           pclk;
-
-        HAL_RCC_GetClockConfig(&clk_config, &latency);
-
-        // 挂载在 APB2 上的定时器
-        if (tim == TIM1 || tim == TIM8 || tim == TIM9 || tim == TIM10 || tim == TIM11)
-        {
-                pclk = HAL_RCC_GetPCLK2Freq();
-                return (clk_config.APB2CLKDivider == RCC_HCLK_DIV1) ? pclk : (pclk * 2u);
-        }
-
-        pclk = HAL_RCC_GetPCLK1Freq();
-        return (clk_config.APB1CLKDivider == RCC_HCLK_DIV1) ? pclk : (pclk * 2u);
-}
 
 // 校验 PWM 通道合法性
 static uint8_t Servo_IsValidChannel(uint32_t channel)
@@ -91,8 +72,7 @@ uint8_t Servo_InitEx(Servo_t *servo, TIM_HandleTypeDef *htim, uint32_t channel, 
         }
 
         // 1us 对应的计数值 = 计数频率 / 1MHz
-        tick_per_us = (float) Servo_GetTimClk(htim->Instance)
-                      / ((float) (htim->Init.Prescaler + 1u) * 1000000.0f);
+        tick_per_us = BSP_TIM_GetTicksPerUs(htim);
 
         arr = __HAL_TIM_GET_AUTORELOAD(htim);
 

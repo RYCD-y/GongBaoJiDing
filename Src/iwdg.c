@@ -45,6 +45,10 @@ void MX_IWDG_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN IWDG_Init 2 */
+  /* 调试时冻结 IWDG: 内核被调试器暂停(断点/单步)时看门狗停止计数,
+     否则 IWDG 超时约 0.5s(LSI 32kHz, 32 分频, Reload 500),
+     断点停留超过 0.5s 芯片就会复位, 表现为暂停/继续/断点全部错乱 */
+  __HAL_DBGMCU_FREEZE_IWDG();
 
   /* USER CODE END IWDG_Init 2 */
 
